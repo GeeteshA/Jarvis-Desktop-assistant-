@@ -1,4 +1,5 @@
 import datetime
+import sys
 import webbrowser
 import os
 import wikipedia
@@ -13,6 +14,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from IgPassword import Username, Password
 from selenium.webdriver.common.by import By
 import time  # End
+# for Gui
+from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtCore import QTimer, QTime, QDate, Qt
+from PyQt5.QtGui import QMovie
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.uic import loadUiType
+from jarvisUi import Ui_JarvisUi
 
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
@@ -35,24 +45,6 @@ def wishme():
         speak("Good Evening")
 
     speak("I Am Jaarvis sir! Please tell me how may I help You?")
-
-
-def takecommand():
-    # It takes microphone input from user and return STRING output
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        r.pause_threshold = 1
-        audio = r.listen(source)
-    try:
-        print("Recognizing...")
-        query = r.recognize_google(audio)
-        print(f"user said: {query}\n")
-
-    except Exception as e:
-        print("Say! that again Please...")
-        return "None"
-    return query
 
 
 class Instabot:
@@ -81,60 +73,122 @@ class Instabot:
 
 
 if __name__ == '__main__':
-    wishme()
-    while 1:
-        query = takecommand().lower()
-        # Logic for executing task based on query
-        sites = [["youtube", "https://www.youtube.com"], ["google", "https://www.google.com"],
-                 ["whatsapp", "https://web"
-                              ".whatsapp.com/"], ["mp", "https://mptenders.gov.in/nicgep/app]"]]
-
-        for site in sites:
-            if f"Open {site[0]}".lower() in query:
-                speak(f"Opening {site[0]} sir...")
-                webbrowser.open(site[1])
-
-        if 'wikipedia' in query:
-            speak('Searching wikipedia...')
-            query = query.replace("wikipedia", "")
-            results = wikipedia.summary(query, sentences=2)
-            speak("According to wikipedia")
-            print(results)
-            speak(results)
-
-        elif 'play music' in query:
-            music_dir = 'D:\\Music'
-            songs = os.listdir(music_dir)
-            # print(songs)
-            os.startfile(os.path.join(music_dir, songs[0]))
-        elif 'open instagram' in query:
-            speak('Opening Instagram sir...')
-            Instabot()
-
-        elif 'time is now' in query:
-            strfdTime = datetime.datetime.now().strftime("%H:%M:%S of %d:%m:%Y")
-            speak(f"Sir the time is {strfdTime}")
+    class MainThread(QThread):
+        def __init__(self):
+            super(MainThread, self).__init__()
 
 
-def Temp(self):
-    search = "temperature in Jaora"
-    url = f"https://www.google.com/search?q={search}"
-    r = requests.get(url)
-    data = BeautifulSoup(r.text, "html.parser")
-    temperature = data.find("div", class_="BNeawe").text
-    speak(f"The Temperature Outside Is {temperature} celcius")
+    def run(self):
+        self.TaskExecution()
 
-    speak("Do I Have To Tell You Another Place Temperature ?")
+        def takecommand():
+            # It takes microphone input from user and return STRING output
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                print("Listening...")
+                r.pause_threshold = 1
+                audio = r.listen(source)
+            try:
+                print("Recognizing...")
+                query = r.recognize_google(audio)
+                print(f"user said: {query}\n")
 
-    if 'yes' in query:
-        speak("Tell Me The Name Of tHE Place ")
-        name = takecommand()
-        search = f"temperature in {name}"
-        url = f"https://www.google.com/search?q={search}"
-        r = requests.get(url)
-        data = BeautifulSoup(r.text, "html.parser")
-        temperature = data.find("div", class_="BNeawe").text
-        speak(f"The Temperature in {name} is {temperature} celcius")
+            except Exception as e:
+                print("Say! that again Please...")
+                return "None"
+            return query
 
-    else:
-        speak("no problem sir")
+        def Temp():
+            search = "temperature in Jaora"
+            url = f"https://www.google.com/search?q={search}"
+            r = requests.get(url)
+            data = BeautifulSoup(r.text, "html.parser")
+            temperature = data.find("div", class_="BNeawe").text
+            speak(f"The Temperature Outside Is {temperature} celcius")
+
+            speak("Do I Have To Tell You Another Place Temperature ?")
+
+            if 'yes' in self.query:
+                speak("Tell Me The Name Of tHE Place ")
+                name = takecommand()
+                search = f"temperature in {name}"
+                url = f"https://www.google.com/search?q={search}"
+                r = requests.get(url)
+                data = BeautifulSoup(r.text, "html.parser")
+                temperature = data.find("div", class_="BNeawe").text
+                speak(f"The Temperature in {name} is {temperature} celcius")
+
+            else:
+                speak("no problem sir")
+
+        def TaskExecution():
+            wishme()
+            while 1:
+                self.query = self.takecommand().lower()
+                # Logic for executing task based on query
+                sites = [["youtube", "https://www.youtube.com"], ["google", "https://www.google.com"],
+                         ["whatsapp", "https://web"
+                                      ".whatsapp.com/"], ["mp", "https://mptenders.gov.in/nicgep/app]"]]
+
+                for site in sites:
+                    if f"Open {site[0]}".lower() in self.query:
+                        speak(f"Opening {site[0]} sir...")
+                        webbrowser.open(site[1])
+
+                if 'wikipedia' in self.query:
+                    speak('Searching wikipedia...')
+                    query = self.query.replace("wikipedia", "")
+                    results = wikipedia.summary(query, sentences=2)
+                    speak("According to wikipedia")
+                    print(results)
+                    speak(results)
+
+                elif 'play music' in self.query:
+                    music_dir = 'D:\\Music'
+                    songs = os.listdir(music_dir)
+                    # print(songs)
+                    os.startfile(os.path.join(music_dir, songs[0]))
+                elif 'open instagram' in self.query:
+                    speak('Opening Instagram sir...')
+                    Instabot()
+
+                elif 'time is now' in self.query:
+                    strfdTime = datetime.datetime.now().strftime("%H:%M:%S of %d:%m:%Y")
+                    speak(f"Sir the time is {strfdTime}")
+
+startExecution = MainThread()
+
+
+class Main(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_JarvisUi()
+        self.ui.setupUi(self)
+        self.ui.pushButton.clicked.connect(self.startTask)
+        self.ui.pushButton_2.clicked.connect(self.close)
+
+    def startTask(self):
+        self.ui.movie = QtGui.QMovie("Ui/7LP8.gif")
+        self.ui.label.setMovie(self.ui.movie)
+        self.ui.movie.start()
+        self.ui.movie = QtGui.QMovie("Ui/Jarvis_Loading_Screen.gif")
+        self.ui.label_2.setMovie(self.ui.movie)
+        self.ui.movie.start()
+        timer = QTimer(self)
+        timer.timeout.connect(self.showTime)
+        timer.start(1000)
+        startExecution.start()
+
+    def showTime(self):
+        current_time = QTime.currentTime()
+        current_date = QDate.currentDate()
+        label_time = current_time.toString('hh:mm:ss')
+        label_date = current_date.toString(Qt.ISODate)
+        self.ui.textBrowser.setText(label_date)
+        self.ui.textBrowser_2.setText(label_time)
+
+
+app = QApplication(sys.argv)
+jarvis = Main()
+jarvis.show()
+exit(app.exec_())
